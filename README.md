@@ -75,7 +75,7 @@ Run these with the default network. `lychee --offline` works inside
 The image sets these environment variables to disable telemetry and
 update notifiers where the tool respects the convention:
 
-- `DO_NOT_TRACK=1` — universal opt-out (<https://consoledonottrack.com/>)
+- `DO_NOT_TRACK=1` — widely adopted opt-out env var convention
 - `NO_UPDATE_NOTIFIER=true` — disables `update-notifier` (used by many
   npm tools)
 - `NPM_CONFIG_UPDATE_NOTIFIER=false` — npm's own update check
