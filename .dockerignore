@@ -1,6 +1,8 @@
 .git
 .github
 .gitignore
+.gitignore.in
 .dockerignore
+.markdownlint-cli2.jsonc
 README.md
 LICENSE

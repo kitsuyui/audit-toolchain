@@ -60,7 +60,7 @@ These tools query remote advisory databases or external URLs as their
 core function. Running them with `--network=none` makes them useless.
 
 | Tool | Why network is needed |
-|---|---|
+| --- | --- |
 | `pip-audit` | queries PyPI advisory DB (pypi.org) |
 | `cargo audit` | fetches RustSec advisory DB (github.com/RustSec) |
 | `cargo deny check advisories` | same advisory DB |
@@ -75,7 +75,7 @@ Run these with the default network. `lychee --offline` works inside
 The image sets these environment variables to disable telemetry and
 update notifiers where the tool respects the convention:
 
-- `DO_NOT_TRACK=1` — universal opt-out (https://consoledonottrack.com/)
+- `DO_NOT_TRACK=1` — universal opt-out (<https://consoledonottrack.com/>)
 - `NO_UPDATE_NOTIFIER=true` — disables `update-notifier` (used by many
   npm tools)
 - `NPM_CONFIG_UPDATE_NOTIFIER=false` — npm's own update check

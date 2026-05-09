@@ -1,0 +1,29 @@
+name: Self audit
+on:
+  - pull_request
+permissions:
+  contents: read
+jobs:
+  self-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build audit-toolchain image
+        run: docker build -t audit-toolchain:ci .
+
+      - name: markdownlint (markdown style)
+        run: |
+          docker run --rm --network=none \
+            -v "$PWD:/workspace" \
+            audit-toolchain:ci markdownlint-cli2 "*.md"
+
+      - name: lychee (offline link integrity)
+        run: |
+          docker run --rm --network=none \
+            -v "$PWD:/workspace" \
+            audit-toolchain:ci lychee --offline --no-progress "*.md"
