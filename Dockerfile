@@ -77,6 +77,17 @@ RUN set -eu; \
         | tar -C /usr/local -xz
 
 # --- audit tools ---
+#
+# Layer order is chosen for build cache stability:
+#   - The heaviest layer that compiles from source (cargo install) sits
+#     directly after the Rust toolchain layer, so the lighter and more
+#     volatile tool installs below cannot invalidate it on edits.
+#   - Cargo's per-source registry cache is dropped after install since
+#     the resulting binaries do not need it at runtime.
+
+# Rust audit tools (cargo install --locked, compiled from source).
+RUN cargo install --locked cargo-audit cargo-deny lychee \
+    && rm -rf /root/.cargo/registry /root/.cargo/git
 
 # Python tools (uv tool install creates per-tool venvs in /root/.local).
 RUN uv tool install ruff \
@@ -91,9 +102,6 @@ RUN bun add -g \
         knip \
         madge \
         markdownlint-cli2
-
-# Rust audit tools (cargo install --locked, compiled from source).
-RUN cargo install --locked cargo-audit cargo-deny lychee
 
 # Go audit tools.
 RUN go install honnef.co/go/tools/cmd/staticcheck@latest \

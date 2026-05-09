@@ -13,8 +13,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build audit-toolchain image
-        run: docker build -t audit-toolchain:ci .
+      - name: Build audit-toolchain image (with GHA layer cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: audit-toolchain:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: markdownlint (markdown style)
         run: |

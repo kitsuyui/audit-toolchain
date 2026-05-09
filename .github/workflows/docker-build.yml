@@ -22,5 +22,11 @@ jobs:
           echo "Flags:     ${{ steps.buildx.outputs.flags }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
 
-      - name: Build
-        run: docker build -t audit-toolchain:ci .
+      - name: Build (with GHA layer cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: audit-toolchain:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
