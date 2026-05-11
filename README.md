@@ -36,6 +36,44 @@ docker run --rm -it --network=none -v "$PWD:/workspace" audit-toolchain:dev
 The container's working directory is `/workspace`. Mount the project
 under audit there.
 
+## Toolkit CLI
+
+The image entrypoint is a thin shim (`/usr/local/bin/audit-toolchain`)
+that provides image-level discoverability without changing how
+individual tools are invoked.
+
+```sh
+# Print the toolkit's own help, version, and tool inventory.
+docker run --rm audit-toolchain:dev --help
+docker run --rm audit-toolchain:dev --version
+docker run --rm audit-toolchain:dev --list-tools
+```
+
+`--list-tools` writes one tool per line as TSV
+(`name<TAB>version<TAB>category`) so automation can verify the image
+inventory without parsing this README or the `Dockerfile`. The same
+data plus the build-time toolkit version is in
+`/usr/local/share/audit-toolchain/{tools.tsv,metadata.txt}` for callers
+that prefer to read the file directly.
+
+Anything that is not a toolkit subcommand is exec'd as-is, so existing
+patterns keep working:
+
+```sh
+docker run --rm --network=none -v "$PWD:/workspace" audit-toolchain:dev ruff check .
+docker run --rm -it audit-toolchain:dev bash
+```
+
+To bypass the shim entirely (e.g. to run a binary literally named
+`--help`), pass `--entrypoint ""` to `docker run`.
+
+The image also publishes [OCI image labels][oci-annotations]
+(`org.opencontainers.image.title`, `description`, `source`, `version`,
+`licenses`) so `docker inspect audit-toolchain:<tag>` returns toolkit
+metadata even without invoking the CLI.
+
+[oci-annotations]: https://github.com/opencontainers/image-spec/blob/main/annotations.md
+
 ## Determinism
 
 Audit results should be reproducible: the same source code audited from
