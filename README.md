@@ -36,6 +36,29 @@ docker run --rm -it --network=none -v "$PWD:/workspace" audit-toolchain:dev
 The container's working directory is `/workspace`. Mount the project
 under audit there.
 
+## Determinism
+
+Audit results should be reproducible: the same source code audited from
+the same `Dockerfile` should produce the same result regardless of when
+the image was built.
+
+To support that, every audit tool installed in the image is
+version-pinned at the `ARG` layer in [`Dockerfile`](Dockerfile). This
+applies to the base toolchains (Debian image tag, uv, bun, rustup, Go)
+and to the audit tools themselves: Rust `cargo install`, Python
+`uv tool install`, JS/TS `bun add -g`, Go `go install`. No `@latest`,
+no unpinned package name.
+
+Bumping a single tool is a one-line change to the corresponding ARG.
+Image consumers do not need to pin by digest as long as they build from
+the same Dockerfile revision: the source itself is the version manifest.
+
+The apt packages installed at the universal layer (`bash`, `git`, `jq`,
+`shellcheck`, `shfmt`, etc.) still resolve against the Debian stable
+snapshot at build time. Their versions are bounded by the `bookworm`
+image tag but not pinned individually; this is acceptable for the
+non-audit utilities at that layer.
+
 ## Network access
 
 Audit results should depend only on the mounted source tree, not on
