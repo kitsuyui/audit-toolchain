@@ -3,11 +3,45 @@
 # audit-toolchain — language-agnostic audit-time tools as a single image.
 # See README.md for usage and tool selection policy.
 
+# --- base layer versions ---
 ARG DEBIAN_VERSION=bookworm
 ARG UV_VERSION=0.5.11
 ARG BUN_VERSION=1.1.42
 ARG RUST_VERSION=1.90.0
 ARG GO_VERSION=1.23.4
+
+# --- audit tool versions ---
+#
+# Tool versions are pinned so the same Dockerfile build produces the
+# same tool set regardless of build date. The image's deterministic-
+# audit guarantee depends on this: a finding produced on one date must
+# be reproducible from the same source on a later date, which requires
+# the audit tool layer to be reproducible too.
+#
+# Bump policy: each ARG is independently bumpable. Renovate / dependabot
+# can target individual ARGs once configured (out of scope for the pin
+# itself).
+
+# Rust audit tools (cargo install).
+ARG CARGO_AUDIT_VERSION=0.22.1
+ARG CARGO_DENY_VERSION=0.19.6
+ARG LYCHEE_VERSION=0.24.2
+# Python audit tools (uv tool install).
+ARG RUFF_VERSION=0.15.12
+ARG MYPY_VERSION=1.14.1
+ARG VULTURE_VERSION=2.16
+ARG PIP_AUDIT_VERSION=2.10.0
+# JS / TS audit tools (bun add -g).
+ARG TYPESCRIPT_VERSION=5.9.3
+ARG BIOME_VERSION=2.4.15
+ARG KNIP_VERSION=6.12.2
+ARG MADGE_VERSION=8.0.0
+ARG MARKDOWNLINT_CLI2_VERSION=0.22.1
+# Go audit tools (go install). Tag format follows each project's
+# convention: staticcheck uses YYYY.N (no v prefix), govulncheck uses
+# vX.Y.Z (with v prefix).
+ARG STATICCHECK_VERSION=2026.1
+ARG GOVULNCHECK_VERSION=v1.1.4
 
 # Pull uv binary from the official image.
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv-source
@@ -86,26 +120,43 @@ RUN set -eu; \
 #     the resulting binaries do not need it at runtime.
 
 # Rust audit tools (cargo install --locked, compiled from source).
-RUN cargo install --locked cargo-audit cargo-deny lychee \
+ARG CARGO_AUDIT_VERSION
+ARG CARGO_DENY_VERSION
+ARG LYCHEE_VERSION
+RUN cargo install --locked \
+        cargo-audit@${CARGO_AUDIT_VERSION} \
+        cargo-deny@${CARGO_DENY_VERSION} \
+        lychee@${LYCHEE_VERSION} \
     && rm -rf /root/.cargo/registry /root/.cargo/git
 
 # Python tools (uv tool install creates per-tool venvs in /root/.local).
-RUN uv tool install ruff \
-    && uv tool install mypy \
-    && uv tool install vulture \
-    && uv tool install pip-audit
+ARG RUFF_VERSION
+ARG MYPY_VERSION
+ARG VULTURE_VERSION
+ARG PIP_AUDIT_VERSION
+RUN uv tool install ruff==${RUFF_VERSION} \
+    && uv tool install mypy==${MYPY_VERSION} \
+    && uv tool install vulture==${VULTURE_VERSION} \
+    && uv tool install pip-audit==${PIP_AUDIT_VERSION}
 
 # JS / TS tools (bun global install).
+ARG TYPESCRIPT_VERSION
+ARG BIOME_VERSION
+ARG KNIP_VERSION
+ARG MADGE_VERSION
+ARG MARKDOWNLINT_CLI2_VERSION
 RUN bun add -g \
-        typescript \
-        @biomejs/biome \
-        knip \
-        madge \
-        markdownlint-cli2
+        typescript@${TYPESCRIPT_VERSION} \
+        @biomejs/biome@${BIOME_VERSION} \
+        knip@${KNIP_VERSION} \
+        madge@${MADGE_VERSION} \
+        markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}
 
 # Go audit tools.
-RUN go install honnef.co/go/tools/cmd/staticcheck@latest \
-    && go install golang.org/x/vuln/cmd/govulncheck@latest \
+ARG STATICCHECK_VERSION
+ARG GOVULNCHECK_VERSION
+RUN go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION} \
+    && go install golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} \
     && rm -rf /root/.cache/go-build
 
 WORKDIR /workspace
