@@ -159,7 +159,85 @@ RUN go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION} \
     && go install golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} \
     && rm -rf /root/.cache/go-build
 
+# --- toolkit-level CLI entry ---
+#
+# A small shim provides image-level `--help`, `--version`, and
+# `--list-tools` so the image can identify itself without operators
+# having to read README + Dockerfile out of band. The shim execs any
+# other argv through to the underlying tool, so existing usage like
+# `docker run audit-toolchain:<tag> ruff check .` continues to work.
+# `--entrypoint ""` remains available as an escape hatch.
+
+# Toolkit version — overridden at build time (e.g. by CI from the git
+# revision). Kept as a build ARG instead of a fixed value so a single
+# Dockerfile build can be tagged from any commit without source edits.
+ARG AUDIT_TOOLCHAIN_VERSION=dev
+ARG AUDIT_TOOLCHAIN_SOURCE=https://github.com/kitsuyui/audit-toolchain
+
+# Re-declare every tool version ARG so they expand in this layer.
+ARG CARGO_AUDIT_VERSION
+ARG CARGO_DENY_VERSION
+ARG LYCHEE_VERSION
+ARG RUFF_VERSION
+ARG MYPY_VERSION
+ARG VULTURE_VERSION
+ARG PIP_AUDIT_VERSION
+ARG TYPESCRIPT_VERSION
+ARG BIOME_VERSION
+ARG KNIP_VERSION
+ARG MADGE_VERSION
+ARG MARKDOWNLINT_CLI2_VERSION
+ARG STATICCHECK_VERSION
+ARG GOVULNCHECK_VERSION
+ARG UV_VERSION
+ARG BUN_VERSION
+ARG RUST_VERSION
+ARG GO_VERSION
+ARG DEBIAN_VERSION
+
+COPY entrypoint/audit-toolchain /usr/local/bin/audit-toolchain
+RUN chmod +x /usr/local/bin/audit-toolchain \
+    && mkdir -p /usr/local/share/audit-toolchain \
+    && { \
+        printf 'audit-toolchain %s\n' "${AUDIT_TOOLCHAIN_VERSION}"; \
+        printf 'source: %s\n' "${AUDIT_TOOLCHAIN_SOURCE}"; \
+        printf 'base: debian:%s-slim\n' "${DEBIAN_VERSION}"; \
+    } > /usr/local/share/audit-toolchain/metadata.txt \
+    && { \
+        printf 'cargo-audit\t%s\trust\n' "${CARGO_AUDIT_VERSION}"; \
+        printf 'cargo-deny\t%s\trust\n' "${CARGO_DENY_VERSION}"; \
+        printf 'lychee\t%s\trust\n' "${LYCHEE_VERSION}"; \
+        printf 'ruff\t%s\tpython\n' "${RUFF_VERSION}"; \
+        printf 'mypy\t%s\tpython\n' "${MYPY_VERSION}"; \
+        printf 'vulture\t%s\tpython\n' "${VULTURE_VERSION}"; \
+        printf 'pip-audit\t%s\tpython\n' "${PIP_AUDIT_VERSION}"; \
+        printf 'typescript\t%s\tjs\n' "${TYPESCRIPT_VERSION}"; \
+        printf 'biome\t%s\tjs\n' "${BIOME_VERSION}"; \
+        printf 'knip\t%s\tjs\n' "${KNIP_VERSION}"; \
+        printf 'madge\t%s\tjs\n' "${MADGE_VERSION}"; \
+        printf 'markdownlint-cli2\t%s\tmarkdown\n' "${MARKDOWNLINT_CLI2_VERSION}"; \
+        printf 'staticcheck\t%s\tgo\n' "${STATICCHECK_VERSION}"; \
+        printf 'govulncheck\t%s\tgo\n' "${GOVULNCHECK_VERSION}"; \
+        printf 'uv\t%s\tlanguage-runtime\n' "${UV_VERSION}"; \
+        printf 'bun\t%s\tlanguage-runtime\n' "${BUN_VERSION}"; \
+        printf 'rustup-toolchain\t%s\tlanguage-runtime\n' "${RUST_VERSION}"; \
+        printf 'go\t%s\tlanguage-runtime\n' "${GO_VERSION}"; \
+    } > /usr/local/share/audit-toolchain/tools.tsv
+
+# OCI image labels so `docker inspect` carries toolkit metadata even
+# when callers cannot or do not invoke the image's own CLI.
+LABEL org.opencontainers.image.title="audit-toolchain" \
+      org.opencontainers.image.description="Language-agnostic, audit-time tools packaged as a single Docker image." \
+      org.opencontainers.image.source="${AUDIT_TOOLCHAIN_SOURCE}" \
+      org.opencontainers.image.version="${AUDIT_TOOLCHAIN_VERSION}" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
 WORKDIR /workspace
 
-# Default to an interactive shell so operators can run any tool.
-CMD ["bash"]
+# Route every invocation through the toolkit shim. With no arguments
+# (CMD []), the shim drops into an interactive bash; with arguments, it
+# either handles them as toolkit subcommands or execs them so the
+# existing `docker run audit-toolchain:<tag> <tool> <args>` usage keeps
+# working.
+ENTRYPOINT ["audit-toolchain"]
+CMD []

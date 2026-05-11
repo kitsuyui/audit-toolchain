@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# audit-toolchain — toolkit-level CLI entry for the audit-toolchain image.
+#
+# Handles the toolkit's own subcommands and forwards anything else to the
+# underlying tool so existing `docker run audit-toolchain:<tag> <tool> ...`
+# usage keeps working. With no arguments, drops into an interactive bash.
+
+set -eu
+
+manifest=/usr/local/share/audit-toolchain/tools.tsv
+metadata=/usr/local/share/audit-toolchain/metadata.txt
+
+print_help() {
+  cat <<'USAGE'
+audit-toolchain — language-agnostic, audit-time tools packaged as a single Docker image.
+
+Usage:
+  docker run --rm [--network=none] -v "$PWD:/workspace" audit-toolchain:<tag> [SUBCOMMAND | TOOL [ARG...]]
+
+Toolkit subcommands:
+  --help, help                 Print this message.
+  --version, version           Print toolkit metadata and image-build info.
+  --list-tools, list-tools     List installed audit tools as TSV
+                               (name<TAB>version<TAB>category), one per line.
+
+Anything else is exec'd as a command in the image. With no arguments, an
+interactive bash is started so all tools are available directly.
+
+Examples:
+  docker run --rm audit-toolchain:dev --version
+  docker run --rm audit-toolchain:dev --list-tools
+  docker run --rm --network=none -v "$PWD:/workspace" audit-toolchain:dev ruff check .
+
+See README.md (https://github.com/kitsuyui/audit-toolchain) for network
+policy and the full tool catalogue.
+USAGE
+}
+
+print_version() {
+  if [ -r "$metadata" ]; then
+    cat "$metadata"
+  else
+    # Fall back to env-only output if the metadata file is missing. We do
+    # not synthesise a version here so any drift is visible rather than
+    # papered over.
+    echo "audit-toolchain ${AUDIT_TOOLCHAIN_VERSION:-unknown}"
+  fi
+}
+
+print_list_tools() {
+  if [ ! -r "$manifest" ]; then
+    echo "audit-toolchain: tool manifest not found at $manifest" >&2
+    return 2
+  fi
+  cat "$manifest"
+}
+
+if [ "$#" -eq 0 ]; then
+  exec bash
+fi
+
+case "$1" in
+  --help|-h|help)
+    print_help
+    exit 0
+    ;;
+  --version|-V|version)
+    print_version
+    exit 0
+    ;;
+  --list-tools|list-tools)
+    print_list_tools
+    exit $?
+    ;;
+  *)
+    exec "$@"
+    ;;
+esac
