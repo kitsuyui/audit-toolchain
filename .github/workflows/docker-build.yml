@@ -30,3 +30,12 @@ jobs:
           tags: audit-toolchain:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Check version fallback
+        run: |
+          metadata_dir="$(mktemp -d)"
+          trap 'rm -rf "$metadata_dir"' EXIT
+          output="$(docker run --rm \
+            -v "$metadata_dir:/usr/local/share/audit-toolchain:ro" \
+            audit-toolchain:ci --version)"
+          test "$output" = "audit-toolchain dev"

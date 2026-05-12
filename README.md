@@ -54,7 +54,9 @@ docker run --rm audit-toolchain:dev --list-tools
 inventory without parsing this README or the `Dockerfile`. The same
 data plus the build-time toolkit version is in
 `/usr/local/share/audit-toolchain/{tools.tsv,metadata.txt}` for callers
-that prefer to read the file directly.
+that prefer to read the file directly. If `metadata.txt` is unavailable,
+`--version` falls back to the runtime `AUDIT_TOOLCHAIN_VERSION`
+environment variable promoted from the build argument.
 
 Anything that is not a toolkit subcommand is exec'd as-is, so existing
 patterns keep working:

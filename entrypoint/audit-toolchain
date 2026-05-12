@@ -40,8 +40,8 @@ print_version() {
   if [ -r "$metadata" ]; then
     cat "$metadata"
   else
-    # Fall back to env-only output if the metadata file is missing. We do
-    # not synthesise a version here so any drift is visible rather than
+    # Fall back to the runtime env promoted from the build ARG. We do not
+    # synthesise a version here so any drift is visible rather than
     # papered over.
     echo "audit-toolchain ${AUDIT_TOOLCHAIN_VERSION:-unknown}"
   fi

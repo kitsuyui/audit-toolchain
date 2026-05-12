@@ -173,6 +173,7 @@ RUN go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION} \
 # Dockerfile build can be tagged from any commit without source edits.
 ARG AUDIT_TOOLCHAIN_VERSION=dev
 ARG AUDIT_TOOLCHAIN_SOURCE=https://github.com/kitsuyui/audit-toolchain
+ENV AUDIT_TOOLCHAIN_VERSION="${AUDIT_TOOLCHAIN_VERSION}"
 
 # Re-declare every tool version ARG so they expand in this layer.
 ARG CARGO_AUDIT_VERSION
