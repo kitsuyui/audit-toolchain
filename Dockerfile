@@ -100,8 +100,8 @@ ARG RUST_VERSION
 ARG TARGETARCH
 RUN set -eu; \
     case "${TARGETARCH}" in \
-        amd64) rustup_target=x86_64-unknown-linux-musl ;; \
-        arm64) rustup_target=aarch64-unknown-linux-musl ;; \
+        amd64) rustup_target=x86_64-unknown-linux-gnu ;; \
+        arm64) rustup_target=aarch64-unknown-linux-gnu ;; \
         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     base="https://static.rust-lang.org/rustup/dist/${rustup_target}"; \
