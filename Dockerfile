@@ -123,7 +123,7 @@ RUN set -eu; \
     esac; \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz"        -o /tmp/go.tar.gz; \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz.sha256" -o /tmp/go.tar.gz.sha256; \
-    echo "$(cat /tmp/go.tar.gz.sha256)  /tmp/go.tar.gz" | sha256sum -c; \
+    printf '%s  /tmp/go.tar.gz\n' "$(tr -d '[:space:]' < /tmp/go.tar.gz.sha256)" | sha256sum -c; \
     tar -C /usr/local -xzf /tmp/go.tar.gz; \
     rm /tmp/go.tar.gz /tmp/go.tar.gz.sha256
 
