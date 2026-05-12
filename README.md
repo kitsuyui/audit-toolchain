@@ -94,8 +94,10 @@ the same Dockerfile revision: the source itself is the version manifest.
 The apt packages installed at the universal layer (`bash`, `git`, `jq`,
 `shellcheck`, `shfmt`, etc.) still resolve against the Debian stable
 snapshot at build time. Their versions are bounded by the `bookworm`
-image tag but not pinned individually; this is acceptable for the
-non-audit utilities at that layer.
+image tag but not pinned individually. This layer contains
+distro-provided shell and universal utilities whose package names are the
+portable contract; the image-level pinning boundary for them is the
+Debian base image tag rather than per-tool upstream version ARGs.
 
 ## Network access
 

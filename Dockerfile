@@ -64,6 +64,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CI=true
 
 # Universal packages from apt.
+# Debian ships the fd CLI as `fdfind` to avoid a package-name
+# collision. Expose the upstream `fd` command name used by the README
+# and common audit command examples.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
