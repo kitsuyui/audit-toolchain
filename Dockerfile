@@ -123,9 +123,12 @@ RUN set -eu; \
     esac; \
     filename="go${GO_VERSION}.linux-${arch}.tar.gz"; \
     curl -fsSL "https://go.dev/dl/${filename}" -o /tmp/go.tar.gz; \
-    expected=$(curl -fsSL "https://go.dev/dl/?mode=json&include=all" \
-        | jq -r --arg v "go${GO_VERSION}" --arg f "${filename}" \
-          '.[] | select(.version == $v) | .files[] | select(.filename == $f) | .sha256'); \
+    curl -fsSL "https://go.dev/dl/?mode=json&include=all" -o /tmp/go-versions.json; \
+    expected=$(jq -r --arg v "go${GO_VERSION}" --arg f "${filename}" \
+        '.[] | select(.version == $v) | .files[] | select(.filename == $f) | .sha256' \
+        /tmp/go-versions.json); \
+    rm /tmp/go-versions.json; \
+    [ -n "$expected" ] || { echo "go SHA256 not found in go.dev API for go${GO_VERSION}/${filename}" >&2; exit 1; }; \
     actual=$(sha256sum /tmp/go.tar.gz | awk '{print $1}'); \
     [ "$actual" = "$expected" ] || { echo "go tarball SHA256 mismatch: expected=${expected} actual=${actual}" >&2; exit 1; }; \
     tar -C /usr/local -xzf /tmp/go.tar.gz; \
