@@ -3,7 +3,9 @@
 #
 # Handles the toolkit's own subcommands and forwards anything else to the
 # underlying tool so existing `docker run audit-toolchain:<tag> <tool> ...`
-# usage keeps working. With no arguments, drops into an interactive bash.
+# usage keeps working. With no arguments and a TTY, drops into an interactive
+# bash. With no arguments and no TTY (non-interactive), prints help and exits
+# 1 so automation sees a clear error instead of a silent exit 0.
 
 set -eu
 
@@ -23,8 +25,9 @@ Toolkit subcommands:
   --list-tools, list-tools     List installed audit tools as TSV
                                (name<TAB>version<TAB>category), one per line.
 
-Anything else is exec'd as a command in the image. With no arguments, an
-interactive bash is started so all tools are available directly.
+Anything else is exec'd as a command in the image. With no arguments and a
+TTY (-it), an interactive bash is started. With no arguments and no TTY, an
+error is returned so automation does not silently treat a no-op as success.
 
 Examples:
   docker run --rm audit-toolchain:dev --version
@@ -56,7 +59,13 @@ print_list_tools() {
 }
 
 if [ "$#" -eq 0 ]; then
-  exec bash
+  if [ -t 0 ]; then
+    exec bash
+  else
+    print_help >&2
+    printf '\naudit-toolchain: no tool specified (stdin is not a TTY). Pass a tool name, or use -it for an interactive shell.\n' >&2
+    exit 1
+  fi
 fi
 
 case "$1" in
