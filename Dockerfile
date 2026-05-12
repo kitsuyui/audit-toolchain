@@ -95,23 +95,44 @@ COPY --from=uv-source /uv /usr/local/bin/uv
 COPY --from=bun-source /usr/local/bin/bun /usr/local/bin/bun
 RUN ln -s /usr/local/bin/bun /usr/local/bin/node
 
-# Rust toolchain via rustup.
+# Rust toolchain via rustup (sha256-verified binary; avoids curl|sh).
 ARG RUST_VERSION
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-        | sh -s -- -y --default-toolchain "${RUST_VERSION}" --profile minimal --no-modify-path \
-    && rustup component add rustfmt clippy
-
-# Go toolchain.
-ARG GO_VERSION
 ARG TARGETARCH
+RUN set -eu; \
+    case "${TARGETARCH}" in \
+        amd64) rustup_target=x86_64-unknown-linux-gnu ;; \
+        arm64) rustup_target=aarch64-unknown-linux-gnu ;; \
+        *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    base="https://static.rust-lang.org/rustup/dist/${rustup_target}"; \
+    curl -fsSL "${base}/rustup-init"        -o /tmp/rustup-init; \
+    curl -fsSL "${base}/rustup-init.sha256" -o /tmp/rustup-init.sha256; \
+    cd /tmp && sha256sum -c rustup-init.sha256; \
+    chmod +x /tmp/rustup-init; \
+    /tmp/rustup-init -y --default-toolchain "${RUST_VERSION}" --profile minimal --no-modify-path; \
+    rm /tmp/rustup-init /tmp/rustup-init.sha256; \
+    rustup component add rustfmt clippy
+
+# Go toolchain (sha256-verified tarball).
+ARG GO_VERSION
 RUN set -eu; \
     case "${TARGETARCH}" in \
         amd64) arch=amd64 ;; \
         arm64) arch=arm64 ;; \
         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz" \
-        | tar -C /usr/local -xz
+    filename="go${GO_VERSION}.linux-${arch}.tar.gz"; \
+    curl -fsSL "https://go.dev/dl/${filename}" -o /tmp/go.tar.gz; \
+    curl -fsSL "https://go.dev/dl/?mode=json&include=all" -o /tmp/go-versions.json; \
+    expected=$(jq -r --arg v "go${GO_VERSION}" --arg f "${filename}" \
+        '.[] | select(.version == $v) | .files[] | select(.filename == $f) | .sha256' \
+        /tmp/go-versions.json); \
+    rm /tmp/go-versions.json; \
+    [ -n "$expected" ] || { echo "go SHA256 not found in go.dev API for go${GO_VERSION}/${filename}" >&2; exit 1; }; \
+    actual=$(sha256sum /tmp/go.tar.gz | awk '{print $1}'); \
+    [ "$actual" = "$expected" ] || { echo "go tarball SHA256 mismatch: expected=${expected} actual=${actual}" >&2; exit 1; }; \
+    tar -C /usr/local -xzf /tmp/go.tar.gz; \
+    rm /tmp/go.tar.gz
 
 # --- audit tools ---
 #
