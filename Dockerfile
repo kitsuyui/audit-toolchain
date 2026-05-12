@@ -123,7 +123,9 @@ RUN set -eu; \
     esac; \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz"        -o /tmp/go.tar.gz; \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz.sha256" -o /tmp/go.tar.gz.sha256; \
-    printf '%s  /tmp/go.tar.gz\n' "$(tr -d '[:space:]' < /tmp/go.tar.gz.sha256)" | sha256sum -c; \
+    actual=$(sha256sum /tmp/go.tar.gz | awk '{print $1}'); \
+    expected=$(awk '{print $1}' /tmp/go.tar.gz.sha256 | tr -d '\r'); \
+    [ "$actual" = "$expected" ] || { echo "go tarball SHA256 mismatch: expected=${expected} actual=${actual}" >&2; exit 1; }; \
     tar -C /usr/local -xzf /tmp/go.tar.gz; \
     rm /tmp/go.tar.gz /tmp/go.tar.gz.sha256
 
