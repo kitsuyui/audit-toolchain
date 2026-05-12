@@ -5,4 +5,4 @@ permissions:
   contents: read
 jobs:
   check:
-    uses: kitsuyui/gh-actions-workflows/.github/workflows/spellcheck.yml@main
+    uses: kitsuyui/gh-actions-workflows/.github/workflows/spellcheck.yml@3c83bcdb1b26c1f39b2aa340ca7a3e60f1ab1d8c # main
