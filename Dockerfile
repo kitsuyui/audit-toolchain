@@ -67,6 +67,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # Debian ships the fd CLI as `fdfind` to avoid a package-name
 # collision. Expose the upstream `fd` command name used by the README
 # and common audit command examples.
+#
+# APT_PACKAGES_DATE pins the cache epoch for this layer. Bump it (or set
+# --build-arg APT_PACKAGES_DATE=$(date +%Y-%m-%d)) whenever apt packages
+# need refreshing. The GHA layer cache key includes this ARG value, so
+# changing it forces a clean apt-get install and picks up Debian updates.
+ARG APT_PACKAGES_DATE=2026-05-13
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
