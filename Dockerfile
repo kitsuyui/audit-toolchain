@@ -5,8 +5,11 @@
 
 # --- base layer versions ---
 ARG DEBIAN_VERSION=bookworm
+ARG DEBIAN_DIGEST=sha256:67b30a61dc87758f0caf819646104f29ecbda97d920aaf5edc834128ac8493d3
 ARG UV_VERSION=0.5.11
+ARG UV_DIGEST=sha256:0ac957607303916420297a4c9c213bb33fbd3c888f9cd7f4f7273596ebf42b85
 ARG BUN_VERSION=1.1.42
+ARG BUN_DIGEST=sha256:9a45ebd9a1e5403177064592e1564791443b1a459356c905d1112e32758dd454
 ARG RUST_VERSION=1.90.0
 ARG GO_VERSION=1.23.4
 
@@ -44,12 +47,12 @@ ARG STATICCHECK_VERSION=2026.1
 ARG GOVULNCHECK_VERSION=v1.1.4
 
 # Pull uv binary from the official image.
-FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv-source
+FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv-source
 
 # Pull bun binary from the official image.
-FROM oven/bun:${BUN_VERSION} AS bun-source
+FROM oven/bun:${BUN_VERSION}@${BUN_DIGEST} AS bun-source
 
-FROM debian:${DEBIAN_VERSION}-slim AS base
+FROM debian:${DEBIAN_VERSION}-slim@${DEBIAN_DIGEST} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
