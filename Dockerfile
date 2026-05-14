@@ -114,8 +114,8 @@ RUN set -eu; \
         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     base="https://static.rust-lang.org/rustup/dist/${rustup_target}"; \
-    curl -fsSL "${base}/rustup-init"        -o /tmp/rustup-init; \
-    curl -fsSL "${base}/rustup-init.sha256" -o /tmp/rustup-init.sha256; \
+    curl -fsSL --max-time 300 --connect-timeout 30 "${base}/rustup-init"        -o /tmp/rustup-init; \
+    curl -fsSL --max-time 60  --connect-timeout 30 "${base}/rustup-init.sha256" -o /tmp/rustup-init.sha256; \
     cd /tmp && sha256sum -c rustup-init.sha256; \
     chmod +x /tmp/rustup-init; \
     /tmp/rustup-init -y --default-toolchain "${RUST_VERSION}" --profile minimal --no-modify-path; \
@@ -131,8 +131,8 @@ RUN set -eu; \
         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     filename="go${GO_VERSION}.linux-${arch}.tar.gz"; \
-    curl -fsSL "https://go.dev/dl/${filename}" -o /tmp/go.tar.gz; \
-    curl -fsSL "https://go.dev/dl/?mode=json&include=all" -o /tmp/go-versions.json; \
+    curl -fsSL --max-time 300 --connect-timeout 30 "https://go.dev/dl/${filename}" -o /tmp/go.tar.gz; \
+    curl -fsSL --max-time 60  --connect-timeout 30 "https://go.dev/dl/?mode=json&include=all" -o /tmp/go-versions.json; \
     expected=$(jq -r --arg v "go${GO_VERSION}" --arg f "${filename}" \
         '.[] | select(.version == $v) | .files[] | select(.filename == $f) | .sha256' \
         /tmp/go-versions.json); \
