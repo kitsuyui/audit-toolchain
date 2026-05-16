@@ -58,6 +58,41 @@ print_list_tools() {
   cat "$manifest"
 }
 
+timestamp_utc() {
+  date -u +%Y-%m-%dT%H:%M:%SZ
+}
+
+run_tool() {
+  local tool="$1"
+  local arg_count
+  local child_pid
+  local status=0
+
+  arg_count=$(($# - 1))
+
+  printf 'audit-toolchain: starting tool=%s arg_count=%s at=%s\n' \
+    "$tool" "$arg_count" "$(timestamp_utc)" >&2
+
+  "$@" &
+  child_pid=$!
+
+  trap 'kill -TERM "$child_pid" 2>/dev/null || true' TERM
+  trap 'kill -INT "$child_pid" 2>/dev/null || true' INT
+
+  if wait "$child_pid"; then
+    status=0
+  else
+    status=$?
+  fi
+
+  trap - TERM INT
+
+  printf 'audit-toolchain: finished tool=%s exit_code=%s at=%s\n' \
+    "$tool" "$status" "$(timestamp_utc)" >&2
+
+  return "$status"
+}
+
 if [ "$#" -eq 0 ]; then
   if [ -t 0 ]; then
     exec bash
@@ -82,6 +117,6 @@ case "$1" in
     exit $?
     ;;
   *)
-    exec "$@"
+    run_tool "$@"
     ;;
 esac

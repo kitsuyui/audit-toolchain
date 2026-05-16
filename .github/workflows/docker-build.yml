@@ -42,3 +42,18 @@ jobs:
             -v "$metadata_dir:/usr/local/share/audit-toolchain:ro" \
             audit-toolchain:ci --version)"
           test "$output" = "audit-toolchain dev"
+
+      - name: Check delegated tool invocation trace
+        run: |
+          stderr_file="$(mktemp)"
+          trap 'rm -f "$stderr_file"' EXIT
+
+          set +e
+          docker run --rm audit-toolchain:ci sh -c 'exit 7' 2>"$stderr_file"
+          status="$?"
+          set -e
+
+          test "$status" = "7"
+          grep -Eq '^audit-toolchain: starting tool=sh arg_count=2 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
+          grep -Eq '^audit-toolchain: finished tool=sh exit_code=7 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
+          ! grep -q 'exit 7' "$stderr_file"
