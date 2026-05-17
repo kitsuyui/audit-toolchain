@@ -65,7 +65,8 @@ timestamp_utc() {
 run_tool() {
   local tool="$1"
   local arg_count
-  local child_pid
+  local child_pid=""
+  local pending_signal=""
   local status=0
 
   arg_count=$(($# - 1))
@@ -73,17 +74,38 @@ run_tool() {
   printf 'audit-toolchain: starting tool=%s arg_count=%s at=%s\n' \
     "$tool" "$arg_count" "$(timestamp_utc)" >&2
 
+  trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
+  trap 'pending_signal=INT; if [ -n "$child_pid" ]; then kill -INT "$child_pid" 2>/dev/null || true; fi' INT
+
   "$@" &
   child_pid=$!
 
-  trap 'kill -TERM "$child_pid" 2>/dev/null || true' TERM
-  trap 'kill -INT "$child_pid" 2>/dev/null || true' INT
+  case "$pending_signal" in
+    TERM)
+      kill -TERM "$child_pid" 2>/dev/null || true
+      ;;
+    INT)
+      kill -INT "$child_pid" 2>/dev/null || true
+      ;;
+  esac
 
-  if wait "$child_pid"; then
-    status=0
-  else
+  while true; do
+    set +e
+    wait "$child_pid"
     status=$?
-  fi
+    set -e
+
+    if [ "$status" -eq 0 ]; then
+      break
+    fi
+
+    if [ -n "$pending_signal" ] && [ "$status" -gt 128 ]; then
+      pending_signal=""
+      continue
+    fi
+
+    break
+  done
 
   trap - TERM INT
 
