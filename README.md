@@ -58,13 +58,27 @@ that prefer to read the file directly. If `metadata.txt` is unavailable,
 `--version` falls back to the runtime `AUDIT_TOOLCHAIN_VERSION`
 environment variable promoted from the build argument.
 
-Anything that is not a toolkit subcommand is exec'd as-is, so existing
-patterns keep working:
+Anything that is not a toolkit subcommand is delegated to the requested
+tool, so existing command lines keep working:
 
 ```sh
 docker run --rm --network=none -v "$PWD:/workspace" audit-toolchain:dev ruff check .
 docker run --rm -it audit-toolchain:dev bash
 ```
+
+The shim preserves the delegated tool's exit status and forwards
+termination signals, but it is not a byte-for-byte stderr passthrough.
+It writes one trace line before the tool starts and one after the tool
+finishes:
+
+```text
+audit-toolchain: starting tool=<name> arg_count=<n> at=<UTC timestamp>
+audit-toolchain: finished tool=<name> exit_code=<status> at=<UTC timestamp>
+```
+
+Automation that parses stderr should treat those `audit-toolchain:`
+lines as toolkit trace metadata. Other stdout and stderr content comes
+from the delegated tool.
 
 To bypass the shim entirely (e.g. to run a binary literally named
 `--help`), pass `--entrypoint ""` to `docker run`.
