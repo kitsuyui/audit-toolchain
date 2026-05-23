@@ -68,6 +68,7 @@ run_tool() {
   local child_pid=""
   local pending_signal=""
   local status=0
+  local signal_status=0
 
   arg_count=$(($# - 1))
 
@@ -101,7 +102,15 @@ run_tool() {
 
     if [ -n "$pending_signal" ] && [ "$status" -gt 128 ]; then
       pending_signal=""
+      signal_status=$status
       continue
+    fi
+
+    # POSIX: wait on an already-reaped PID returns 127. If that happens after
+    # a signal-driven re-wait, restore the signal exit status so callers see
+    # the correct code instead of 127 ("command not found").
+    if [ "$status" -eq 127 ] && [ "$signal_status" -gt 0 ]; then
+      status=$signal_status
     fi
 
     break
