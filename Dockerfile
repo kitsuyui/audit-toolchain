@@ -76,7 +76,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # need refreshing. The GHA layer cache key includes this ARG value, so
 # changing it forces a clean apt-get install and picks up Debian updates.
 ARG APT_PACKAGES_DATE=2026-05-13
-RUN apt-get update \
+RUN echo "apt cache epoch: $APT_PACKAGES_DATE" \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         build-essential \
