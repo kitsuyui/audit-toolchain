@@ -52,7 +52,7 @@ print_version() {
 
 print_list_tools() {
   if [ ! -r "$manifest" ]; then
-    echo "audit-toolchain: tool manifest not found at $manifest" >&2
+    printf 'audit-toolchain: level=error event=manifest_not_found path=%s\n' "$manifest" >&2
     return 2
   fi
   cat "$manifest"
@@ -72,7 +72,7 @@ run_tool() {
 
   arg_count=$(($# - 1))
 
-  printf 'audit-toolchain: starting tool=%s arg_count=%s at=%s\n' \
+  printf 'audit-toolchain: level=info event=tool_start tool=%s arg_count=%s at=%s\n' \
     "$tool" "$arg_count" "$(timestamp_utc)" >&2
 
   trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
@@ -118,8 +118,18 @@ run_tool() {
 
   trap - TERM INT
 
-  printf 'audit-toolchain: finished tool=%s exit_code=%s at=%s\n' \
-    "$tool" "$status" "$(timestamp_utc)" >&2
+  local level="info"
+  local event="tool_finish"
+  if [ "$status" -eq 130 ] || [ "$status" -eq 143 ]; then
+    level="warn"
+    event="tool_killed"
+  elif [ "$status" -ne 0 ]; then
+    level="error"
+    event="tool_finish"
+  fi
+
+  printf 'audit-toolchain: level=%s event=%s tool=%s exit_code=%s at=%s\n' \
+    "$level" "$event" "$tool" "$status" "$(timestamp_utc)" >&2
 
   return "$status"
 }
@@ -129,7 +139,7 @@ if [ "$#" -eq 0 ]; then
     exec bash
   else
     print_help >&2
-    printf '\naudit-toolchain: no tool specified (stdin is not a TTY). Pass a tool name, or use -it for an interactive shell.\n' >&2
+    printf 'audit-toolchain: level=error event=no_tool_specified reason=no_tty\n' >&2
     exit 1
   fi
 fi
