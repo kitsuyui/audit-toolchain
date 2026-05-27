@@ -11,7 +11,9 @@ ARG UV_DIGEST=sha256:0ac957607303916420297a4c9c213bb33fbd3c888f9cd7f4f7273596ebf
 ARG BUN_VERSION=1.1.42
 ARG BUN_DIGEST=sha256:9a45ebd9a1e5403177064592e1564791443b1a459356c905d1112e32758dd454
 ARG RUST_VERSION=1.90.0
+ARG RUST_DIGEST=sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
 ARG GO_VERSION=1.23.4
+ARG GO_DIGEST=sha256:95db116434e3f21a2a15600ffc7169bf380c6bfd021b154d106fcb346721c277
 
 # --- audit tool versions ---
 #
@@ -52,12 +54,22 @@ FROM ghcr.io/astral-sh/uv:${UV_VERSION}@${UV_DIGEST} AS uv-source
 # Pull bun binary from the official image.
 FROM oven/bun:${BUN_VERSION}@${BUN_DIGEST} AS bun-source
 
+# Rust toolchain from official image. rustfmt and clippy are added here
+# so they are available when cargo install runs in the base stage.
+FROM rust:${RUST_VERSION}-slim-bookworm@${RUST_DIGEST} AS rust-source
+RUN rustup component add rustfmt clippy
+
+# Go toolchain from official image.
+FROM golang:${GO_VERSION}-bookworm@${GO_DIGEST} AS go-source
+
 FROM debian:${DEBIAN_VERSION}-slim@${DEBIAN_DIGEST} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    PATH=/root/.local/bin:/root/.bun/bin:/root/.cargo/bin:/usr/local/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/root/.local/bin:/root/.bun/bin:/usr/local/cargo/bin:/usr/local/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     # Opt out of telemetry and update checks. Defense in depth on top of
     # the recommended `--network=none` for local-only audits.
     DO_NOT_TRACK=1 \
@@ -105,44 +117,12 @@ COPY --from=uv-source /uv /usr/local/bin/uv
 COPY --from=bun-source /usr/local/bin/bun /usr/local/bin/bun
 RUN ln -s /usr/local/bin/bun /usr/local/bin/node
 
-# Rust toolchain via rustup (sha256-verified binary; avoids curl|sh).
-ARG RUST_VERSION
-ARG TARGETARCH
-RUN set -eu; \
-    case "${TARGETARCH}" in \
-        amd64) rustup_target=x86_64-unknown-linux-gnu ;; \
-        arm64) rustup_target=aarch64-unknown-linux-gnu ;; \
-        *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
-    esac; \
-    base="https://static.rust-lang.org/rustup/dist/${rustup_target}"; \
-    curl -fsSL --max-time 300 --connect-timeout 30 "${base}/rustup-init"        -o /tmp/rustup-init; \
-    curl -fsSL --max-time 60  --connect-timeout 30 "${base}/rustup-init.sha256" -o /tmp/rustup-init.sha256; \
-    cd /tmp && sha256sum -c rustup-init.sha256; \
-    chmod +x /tmp/rustup-init; \
-    /tmp/rustup-init -y --default-toolchain "${RUST_VERSION}" --profile minimal --no-modify-path; \
-    rm /tmp/rustup-init /tmp/rustup-init.sha256; \
-    rustup component add rustfmt clippy
+# Rust toolchain — copy from official image (RUSTUP_HOME + CARGO_HOME).
+COPY --from=rust-source /usr/local/rustup /usr/local/rustup
+COPY --from=rust-source /usr/local/cargo /usr/local/cargo
 
-# Go toolchain (sha256-verified tarball).
-ARG GO_VERSION
-RUN set -eu; \
-    case "${TARGETARCH}" in \
-        amd64) arch=amd64 ;; \
-        arm64) arch=arm64 ;; \
-        *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
-    esac; \
-    filename="go${GO_VERSION}.linux-${arch}.tar.gz"; \
-    curl -fsSL --max-time 300 --connect-timeout 30 "https://go.dev/dl/${filename}" -o /tmp/go.tar.gz; \
-    curl -fsSL --max-time 60  --connect-timeout 30 "https://go.dev/dl/?mode=json&include=all" -o /tmp/go-versions.json; \
-    expected=$(jq -r --arg v "go${GO_VERSION}" --arg f "${filename}" \
-        '.[] | select(.version == $v) | .files[] | select(.filename == $f) | .sha256' \
-        /tmp/go-versions.json); \
-    rm /tmp/go-versions.json; \
-    [ -n "$expected" ] || { echo "go SHA256 not found in go.dev API for go${GO_VERSION}/${filename}" >&2; exit 1; }; \
-    actual=$(sha256sum /tmp/go.tar.gz | awk '{print $1}'); \
-    [ "$actual" = "$expected" ] || { echo "go tarball SHA256 mismatch: expected=${expected} actual=${actual}" >&2; exit 1; }; \
-    tar -C /usr/local -xzf /tmp/go.tar.gz; \
-    rm /tmp/go.tar.gz
+# Go toolchain — copy from official image.
+COPY --from=go-source /usr/local/go /usr/local/go
 
 # --- audit tools ---
 #
@@ -161,7 +141,7 @@ RUN cargo install --locked \
         cargo-audit@${CARGO_AUDIT_VERSION} \
         cargo-deny@${CARGO_DENY_VERSION} \
         lychee@${LYCHEE_VERSION} \
-    && rm -rf /root/.cargo/registry /root/.cargo/git
+    && rm -rf /usr/local/cargo/registry /usr/local/cargo/git
 
 # Python tools (uv tool install creates per-tool venvs in /root/.local).
 ARG RUFF_VERSION
