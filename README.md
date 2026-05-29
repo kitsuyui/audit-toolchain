@@ -18,7 +18,9 @@ modifying the project under audit.
 
 ```sh
 # Build
-docker build -t audit-toolchain:dev .
+docker build \
+  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse --short HEAD)" \
+  -t audit-toolchain:dev .
 
 # Run a local-only tool against the current directory.
 # Use --network=none to enforce that the audit reads only the mount.
@@ -57,6 +59,9 @@ data plus the build-time toolkit version is in
 that prefer to read the file directly. If `metadata.txt` is unavailable,
 `--version` falls back to the runtime `AUDIT_TOOLCHAIN_VERSION`
 environment variable promoted from the build argument.
+CI builds pass the current commit SHA as `AUDIT_TOOLCHAIN_VERSION` so
+`--version` and the OCI `org.opencontainers.image.version` label identify
+the exact source revision used for the image build.
 
 Anything that is not a toolkit subcommand is delegated to the requested
 tool, so existing command lines keep working:
