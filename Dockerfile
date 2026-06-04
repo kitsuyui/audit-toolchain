@@ -221,7 +221,7 @@ RUN chmod +x /usr/local/bin/audit-toolchain \
     && { \
         printf 'cargo-audit\t%s\trust\n' "${CARGO_AUDIT_VERSION}"; \
         printf 'cargo-deny\t%s\trust\n' "${CARGO_DENY_VERSION}"; \
-        printf 'lychee\t%s\trust\n' "${LYCHEE_VERSION}"; \
+        printf 'lychee\t%s\tmarkdown\n' "${LYCHEE_VERSION}"; \
         printf 'ruff\t%s\tpython\n' "${RUFF_VERSION}"; \
         printf 'mypy\t%s\tpython\n' "${MYPY_VERSION}"; \
         printf 'vulture\t%s\tpython\n' "${VULTURE_VERSION}"; \
@@ -237,6 +237,14 @@ RUN chmod +x /usr/local/bin/audit-toolchain \
         printf 'bun\t%s\tlanguage-runtime\n' "${BUN_VERSION}"; \
         printf 'rustup-toolchain\t%s\tlanguage-runtime\n' "${RUST_VERSION}"; \
         printf 'go\t%s\tlanguage-runtime\n' "${GO_VERSION}"; \
+        printf 'shellcheck\t%s\tshell\n' "$(shellcheck --version | grep '^version:' | cut -d' ' -f2)"; \
+        printf 'shfmt\t%s\tshell\n' "$(shfmt --version)"; \
+        printf 'ripgrep\t%s\tuniversal\n' "$(rg --version | head -1 | cut -d' ' -f2)"; \
+        printf 'fd\t%s\tuniversal\n' "$(fd --version | cut -d' ' -f2)"; \
+        printf 'tree\t%s\tuniversal\n' "$(tree --version | cut -d' ' -f2 | tr -d v)"; \
+        printf 'jq\t%s\tuniversal\n' "$(jq --version | sed 's/^jq-//')"; \
+        printf 'git\t%s\tuniversal\n' "$(git --version | cut -d' ' -f3)"; \
+        printf 'curl\t%s\tuniversal\n' "$(curl --version | head -1 | cut -d' ' -f2)"; \
     } > /usr/local/share/audit-toolchain/tools.tsv
 
 # OCI image labels so `docker inspect` carries toolkit metadata even
