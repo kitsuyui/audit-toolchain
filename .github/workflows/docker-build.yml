@@ -35,17 +35,32 @@ jobs:
           context: .
           load: true
           tags: audit-toolchain:ci
+          build-args: |
+            AUDIT_TOOLCHAIN_VERSION=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Check version metadata
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
+        run: |
+          version_line="$(docker run --rm audit-toolchain:ci --version | sed -n '1p')"
+          test "$version_line" = "audit-toolchain $EXPECTED_VERSION"
+
+          label="$(docker inspect audit-toolchain:ci \
+            --format '{{ index .Config.Labels "org.opencontainers.image.version" }}')"
+          test "$label" = "$EXPECTED_VERSION"
+
       - name: Check version fallback
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
         run: |
           metadata_dir="$(mktemp -d)"
           trap 'rm -rf "$metadata_dir"' EXIT
           output="$(docker run --rm \
             -v "$metadata_dir:/usr/local/share/audit-toolchain:ro" \
             audit-toolchain:ci --version)"
-          test "$output" = "audit-toolchain dev"
+          test "$output" = "audit-toolchain $EXPECTED_VERSION"
 
       - name: Check delegated tool invocation trace
         run: |
