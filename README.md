@@ -95,6 +95,27 @@ metadata even without invoking the CLI.
 
 [oci-annotations]: https://github.com/opencontainers/image-spec/blob/main/annotations.md
 
+## CI metric baselines
+
+The `Test docker build` workflow runs
+[`scripts/check-image-metrics.sh`](scripts/check-image-metrics.sh)
+against `audit-toolchain:ci` after the image is built. The check fails
+when the Docker image size exceeds `1000000000` bytes or when
+`--list-tools` reports anything other than `26` installed tools.
+
+Run the same gate locally after building the CI image:
+
+```sh
+docker build \
+  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse HEAD)" \
+  -t audit-toolchain:ci .
+scripts/check-image-metrics.sh audit-toolchain:ci
+```
+
+When a legitimate tool addition, removal, or layer change alters either
+metric, update the script baseline in the same change so the growth is
+intentional and visible in review.
+
 ## Determinism
 
 Audit results should be reproducible: the same source code audited from
