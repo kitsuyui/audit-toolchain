@@ -3,7 +3,7 @@
 set -eu
 
 image="${1:-audit-toolchain:ci}"
-max_image_size_bytes="${AUDIT_TOOLCHAIN_MAX_IMAGE_SIZE_BYTES:-1000000000}"
+max_image_size_bytes="${AUDIT_TOOLCHAIN_MAX_IMAGE_SIZE_BYTES:-2500000000}"
 expected_tool_count="${AUDIT_TOOLCHAIN_EXPECTED_TOOL_COUNT:-26}"
 
 is_unsigned_integer() {

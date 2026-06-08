@@ -100,8 +100,11 @@ metadata even without invoking the CLI.
 The `Test docker build` workflow runs
 [`scripts/check-image-metrics.sh`](scripts/check-image-metrics.sh)
 against `audit-toolchain:ci` after the image is built. The check fails
-when the Docker image size exceeds `1000000000` bytes or when
-`--list-tools` reports anything other than `26` installed tools.
+when `docker image inspect ... --format '{{.Size}}'` reports an image
+size above `2500000000` bytes or when `--list-tools` reports anything
+other than `26` installed tools. The image-size baseline follows the CI
+runner's Docker measurement rather than Docker Desktop's compressed
+display size.
 
 Run the same gate locally after building the CI image:
 
