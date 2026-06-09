@@ -253,6 +253,31 @@ a concrete audit run requires them):
 - `cargo-modules`, `cargo-deps` — Rust; smaller community
 - `golangci-lint` — Go; meta-wrapper, may add later
 
+## Development
+
+[lefthook](https://github.com/evilmartians/lefthook) is used to run fast local
+checks before commit and push. Install it once after cloning:
+
+```sh
+lefthook install
+```
+
+### Hooks
+
+| Hook | Check | Command |
+| --- | --- | --- |
+| `pre-commit`, `pre-push` | `shellcheck` | `shellcheck entrypoint/audit-toolchain scripts/check-image-metrics.sh` |
+
+`shellcheck` performs static analysis on the shell scripts in this repository
+(`entrypoint/audit-toolchain` and `scripts/check-image-metrics.sh`). It runs
+in under a second and catches common shell scripting errors before they reach
+CI.
+
+The full `docker build` is intentionally left to CI: it requires the Docker
+daemon, pulls multi-GB base images, and compiles Rust packages from source —
+not suitable for a local pre-commit hook. The hooks add fast static checks that
+surface issues earlier, complementing rather than replacing CI.
+
 ## License
 
 Apache-2.0 (see `LICENSE`).
