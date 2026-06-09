@@ -51,6 +51,9 @@ jobs:
             --format '{{ index .Config.Labels "org.opencontainers.image.version" }}')"
           test "$label" = "$EXPECTED_VERSION"
 
+      - name: Check image metrics
+        run: scripts/check-image-metrics.sh audit-toolchain:ci
+
       - name: Check version fallback
         env:
           EXPECTED_VERSION: ${{ github.sha }}
