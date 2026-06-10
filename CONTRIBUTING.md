@@ -25,7 +25,7 @@ If a tool overlaps with an existing one (e.g. another Python linter), explain wh
 Every tool must be pinned by version in the `Dockerfile`. Use the corresponding install ARG:
 
 | Ecosystem | Install method | ARG pattern |
-|-----------|---------------|-------------|
+| --------- | -------------- | ----------- |
 | Python | `uv tool install <tool>==<version>` | `ARG <TOOL>_VERSION=<version>` |
 | JS/TS | `bun add -g <tool>@<version>` | `ARG <TOOL>_VERSION=<version>` |
 | Rust | `cargo install <tool> --version <version>` | `ARG <TOOL>_VERSION=<version>` |
@@ -62,7 +62,7 @@ The full `docker build` is intentionally left to CI (it compiles Rust packages f
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) with English messages:
 
-```
+```text
 fix: <message>
 feat: <message>
 ci: <message>
