@@ -94,11 +94,11 @@ RUN set -eu \
     && snapshot_ts="$(printf '%s' "${APT_PACKAGES_DATE}" | tr -d '-')T000000Z" \
     && echo "apt snapshot: ${snapshot_ts}" \
     && rm -f /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list \
-    && printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/%s/ bookworm main\n' \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/%s/ bookworm main\n' \
         "${snapshot_ts}" > /etc/apt/sources.list \
-    && printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
         "${snapshot_ts}" >> /etc/apt/sources.list \
-    && printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/%s/ bookworm-updates main\n' \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/%s/ bookworm-updates main\n' \
         "${snapshot_ts}" >> /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
