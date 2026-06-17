@@ -42,3 +42,9 @@ jobs:
           docker run --rm --network=none \
             -v "$PWD:/workspace" \
             audit-toolchain:ci lychee --offline --no-progress "*.md"
+
+      - name: shellcheck (shell script quality)
+        run: |
+          docker run --rm --network=none \
+            -v "$PWD:/workspace" \
+            audit-toolchain:ci shellcheck entrypoint/audit-toolchain scripts/check-image-metrics.sh
