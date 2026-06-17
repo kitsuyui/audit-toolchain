@@ -69,6 +69,7 @@ run_tool() {
   local pending_signal=""
   local status=0
   local signal_status=0
+  local rewaiting=0
 
   arg_count=$(($# - 1))
 
@@ -103,13 +104,17 @@ run_tool() {
     if [ -n "$pending_signal" ] && [ "$status" -gt 128 ]; then
       pending_signal=""
       signal_status=$status
+      rewaiting=1
       continue
     fi
 
-    # POSIX: wait on an already-reaped PID returns 127. If that happens after
-    # a signal-driven re-wait, restore the signal exit status so callers see
-    # the correct code instead of 127 ("command not found").
-    if [ "$status" -eq 127 ] && [ "$signal_status" -gt 0 ]; then
+    # POSIX: wait on an already-reaped PID returns 127. If that happens during
+    # the signal-driven re-wait phase (rewaiting=1), restore the signal exit
+    # status so callers see the correct code instead of 127 ("command not found").
+    # The flag is consumed here (one-shot) so a stale signal_status cannot match
+    # a subsequent wait that returns 127 for an unrelated reason.
+    if [ "$status" -eq 127 ] && [ "$rewaiting" -eq 1 ]; then
+      rewaiting=0
       status=$signal_status
     fi
 
