@@ -2,6 +2,38 @@
 
 set -eu
 
+print_usage() {
+	cat <<'USAGE'
+Usage: check-image-metrics.sh [IMAGE]
+
+Validate that a built Docker image meets size and tool-count baselines.
+
+Arguments:
+  IMAGE    Docker image to inspect (default: audit-toolchain:ci)
+
+Environment variables:
+  AUDIT_TOOLCHAIN_MAX_IMAGE_SIZE_BYTES
+      Maximum uncompressed image size in bytes (default: 2500000000 = 2.5 GB).
+      The threshold follows the CI runner's Docker measurement, not Docker
+      Desktop's compressed display size. Update in the same commit that causes
+      a legitimate size change.
+  AUDIT_TOOLCHAIN_EXPECTED_TOOL_COUNT
+      Exact number of tools expected from --list-tools (default: 26).
+      Update in the same commit that adds or removes a tool from the Dockerfile.
+
+Exit codes:
+  0   all checks passed
+  1   a check failed (size exceeded, tool count mismatch, or internal error)
+USAGE
+}
+
+case "${1:-}" in
+--help | -h)
+	print_usage
+	exit 0
+	;;
+esac
+
 image="${1:-audit-toolchain:ci}"
 max_image_size_bytes="${AUDIT_TOOLCHAIN_MAX_IMAGE_SIZE_BYTES:-2500000000}"
 expected_tool_count="${AUDIT_TOOLCHAIN_EXPECTED_TOOL_COUNT:-26}"
