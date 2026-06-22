@@ -30,7 +30,12 @@ if [ "$image_size_bytes" -gt "$max_image_size_bytes" ]; then
 	exit 1
 fi
 
-tool_count="$(docker run --rm "$image" --list-tools | awk 'NF { count++ } END { print count + 0 }')"
+tool_list="$(docker run --rm "$image" --list-tools)" || {
+	status="$?"
+	printf 'error: failed to list tools from image %s (exit %s)\n' "$image" "$status" >&2
+	exit "$status"
+}
+tool_count="$(printf '%s\n' "$tool_list" | awk 'NF { count++ } END { print count + 0 }')"
 if ! is_unsigned_integer "$tool_count"; then
 	printf 'error: tool count is not an integer: %s\n' "$tool_count" >&2
 	exit 1
