@@ -270,6 +270,14 @@ checks before commit and push. Install it once after cloning:
 lefthook install
 ```
 
+### Repository layout
+
+`entrypoint/audit-toolchain` is the source for the shim installed as
+`/usr/local/bin/audit-toolchain` inside the image. The `entrypoint/`
+directory groups scripts that are copied into the image as top-level
+commands; add sibling scripts here when introducing additional toolkit
+entry points.
+
 ### Hooks
 
 | Hook | Check | Command |
