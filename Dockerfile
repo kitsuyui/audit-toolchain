@@ -86,12 +86,23 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # collision. Expose the upstream `fd` command name used by the README
 # and common audit command examples.
 #
-# APT_PACKAGES_DATE pins the cache epoch for this layer. Bump it (or set
-# --build-arg APT_PACKAGES_DATE=$(date +%Y-%m-%d)) whenever apt packages
-# need refreshing. The GHA layer cache key includes this ARG value, so
-# changing it forces a clean apt-get install and picks up Debian updates.
+# APT_PACKAGES_DATE pins this layer to a specific snapshot.debian.org
+# archive, making the installed package versions reproducible regardless
+# of build date. Format: YYYY-MM-DD (converted to YYYYMMDDTHHMMSSz
+# internally). Bump when you want to pick up newer Debian packages;
+# the GHA layer cache key includes this value so a bump forces a full
+# apt-get install.
 ARG APT_PACKAGES_DATE=2026-05-13
-RUN echo "apt cache epoch: $APT_PACKAGES_DATE" \
+RUN set -eu \
+    && snapshot_ts="$(printf '%s' "${APT_PACKAGES_DATE}" | tr -d '-')T000000Z" \
+    && echo "apt snapshot: ${snapshot_ts}" \
+    && rm -f /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/%s/ bookworm main\n' \
+        "${snapshot_ts}" > /etc/apt/sources.list \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
+        "${snapshot_ts}" >> /etc/apt/sources.list \
+    && printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/%s/ bookworm-updates main\n' \
+        "${snapshot_ts}" >> /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \

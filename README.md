@@ -142,12 +142,15 @@ Image consumers do not need to pin by digest as long as they build from
 the same Dockerfile revision: the source itself is the version manifest.
 
 The apt packages installed at the universal layer (`bash`, `git`, `jq`,
-`shellcheck`, `shfmt`, etc.) still resolve against the Debian stable
-snapshot at build time. Their versions are bounded by the `bookworm`
-image tag but not pinned individually. This layer contains
-distro-provided shell and universal utilities whose package names are the
-portable contract; the image-level pinning boundary for them is the
-Debian base image tag rather than per-tool upstream version ARGs.
+`shellcheck`, `shfmt`, etc.) are pinned to a specific
+[snapshot.debian.org](https://snapshot.debian.org/) archive date
+controlled by the `APT_PACKAGES_DATE` build argument. The Dockerfile
+rewrites `/etc/apt/sources.list` to point to that snapshot before
+running `apt-get install`, so rebuilding from the same `Dockerfile`
+revision on any later date installs the same package versions. To pick
+up newer Debian packages, bump `APT_PACKAGES_DATE` to the desired date
+(format: `YYYY-MM-DD`); the GHA layer cache key includes this value so
+a bump forces a fresh `apt-get install`.
 
 ## Network access
 
