@@ -73,13 +73,18 @@ docker run --rm -it audit-toolchain:dev bash
 
 The shim preserves the delegated tool's exit status and forwards
 termination signals, but it is not a byte-for-byte stderr passthrough.
-It writes one trace line before the tool starts and one after the tool
-finishes:
+It writes one trace line before the tool starts and one after it exits:
 
 ```text
-audit-toolchain: starting tool=<name> arg_count=<n> at=<UTC timestamp>
-audit-toolchain: finished tool=<name> exit_code=<status> at=<UTC timestamp>
+audit-toolchain: level=info event=tool_start tool=<name> arg_count=<n> at=<UTC timestamp>
+audit-toolchain: level=info event=tool_finish tool=<name> exit_code=0 at=<UTC timestamp>
+audit-toolchain: level=error event=tool_finish tool=<name> exit_code=<non-zero> at=<UTC timestamp>
+audit-toolchain: level=warn event=tool_killed tool=<name> exit_code=<signal> at=<UTC timestamp>
 ```
+
+`event=tool_killed` is emitted when the tool exits due to a termination
+signal (e.g. SIGINT or SIGTERM); all other non-zero exits use
+`event=tool_finish`.
 
 Automation that parses stderr should treat those `audit-toolchain:`
 lines as toolkit trace metadata. Other stdout and stderr content comes
