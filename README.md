@@ -274,10 +274,11 @@ lefthook install
 
 | Hook | Check | Command |
 | --- | --- | --- |
-| `pre-commit`, `pre-push` | `shellcheck` | `shellcheck entrypoint/audit-toolchain scripts/check-image-metrics.sh` |
+| `pre-commit`, `pre-push` | `shellcheck` | `shellcheck entrypoint/audit-toolchain scripts/check-image-metrics.sh scripts/check-entrypoint-trace.sh` |
 
 `shellcheck` performs static analysis on the shell scripts in this repository
-(`entrypoint/audit-toolchain` and `scripts/check-image-metrics.sh`). It runs
+(`entrypoint/audit-toolchain`, `scripts/check-image-metrics.sh`, and
+`scripts/check-entrypoint-trace.sh`). It runs
 in under a second and catches common shell scripting errors before they reach
 CI.
 

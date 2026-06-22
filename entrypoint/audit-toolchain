@@ -62,8 +62,53 @@ timestamp_utc() {
   date -u +%Y-%m-%dT%H:%M:%SZ
 }
 
+logfmt_value() {
+  local value="$1"
+  local char=""
+  local encoded=""
+  local out=""
+  local i=0
+
+  case "$value" in
+    '' | *[!A-Za-z0-9_./:-]*)
+      for ((i = 0; i < ${#value}; i++)); do
+        char="${value:i:1}"
+        case "$char" in
+          \\)
+            out="${out}\\\\"
+            ;;
+          '"')
+            out="${out}\\\""
+            ;;
+          $'\n')
+            out="${out}\\n"
+            ;;
+          $'\r')
+            out="${out}\\r"
+            ;;
+          $'\t')
+            out="${out}\\t"
+            ;;
+          [[:cntrl:]])
+            printf -v encoded '\\x%02X' "'$char"
+            out="${out}${encoded}"
+            ;;
+          *)
+            out="${out}${char}"
+            ;;
+        esac
+      done
+      printf '"%s"' "$out"
+      ;;
+    *)
+      printf '%s' "$value"
+      ;;
+  esac
+}
+
 run_tool() {
   local tool="$1"
+  local tool_logfmt
   local arg_count
   local child_pid=""
   local pending_signal=""
@@ -72,9 +117,10 @@ run_tool() {
   local rewaiting=0
 
   arg_count=$(($# - 1))
+  tool_logfmt="$(logfmt_value "$tool")"
 
   printf 'audit-toolchain: level=info event=tool_start tool=%s arg_count=%s at=%s\n' \
-    "$tool" "$arg_count" "$(timestamp_utc)" >&2
+    "$tool_logfmt" "$arg_count" "$(timestamp_utc)" >&2
 
   trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
   trap 'pending_signal=INT; if [ -n "$child_pid" ]; then kill -INT "$child_pid" 2>/dev/null || true; fi' INT
@@ -134,7 +180,7 @@ run_tool() {
   fi
 
   printf 'audit-toolchain: level=%s event=%s tool=%s exit_code=%s at=%s\n' \
-    "$level" "$event" "$tool" "$status" "$(timestamp_utc)" >&2
+    "$level" "$event" "$tool_logfmt" "$status" "$(timestamp_utc)" >&2
 
   return "$status"
 }
