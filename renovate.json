@@ -1,0 +1,104 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG CARGO_AUDIT_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "cargo-audit",
+      "datasourceTemplate": "crate"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG CARGO_DENY_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "cargo-deny",
+      "datasourceTemplate": "crate"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG LYCHEE_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "lychee",
+      "datasourceTemplate": "crate"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG RUFF_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "ruff",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG MYPY_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "mypy",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG VULTURE_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "vulture",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG PIP_AUDIT_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "pip-audit",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG TYPESCRIPT_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "typescript",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG BIOME_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "@biomejs/biome",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG KNIP_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "knip",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG MADGE_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "madge",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG MARKDOWNLINT_CLI2_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "markdownlint-cli2",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG STATICCHECK_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "dominikh/go-tools",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG GOVULNCHECK_VERSION=(?<currentValue>.+)"],
+      "depNameTemplate": "golang.org/x/vuln",
+      "datasourceTemplate": "go"
+    }
+  ]
+}
