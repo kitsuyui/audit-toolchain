@@ -171,7 +171,7 @@ run_tool() {
 
   local level="info"
   local event="tool_finish"
-  if [ "$status" -eq 130 ] || [ "$status" -eq 143 ]; then
+  if [ "$status" -gt 128 ]; then
     level="warn"
     event="tool_killed"
   elif [ "$status" -ne 0 ]; then
