@@ -69,7 +69,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
-    PATH=/root/.local/bin:/root/.bun/bin:/usr/local/cargo/bin:/usr/local/go/bin:/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    UV_TOOL_BIN_DIR=/usr/local/uv-tool-bins \
+    GOPATH=/usr/local/gopath \
+    BUN_INSTALL=/usr/local/bun \
+    PATH=/usr/local/uv-tool-bins:/usr/local/bun/bin:/usr/local/cargo/bin:/usr/local/go/bin:/usr/local/gopath/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     # Opt out of telemetry and update checks. Defense in depth on top of
     # the recommended `--network=none` for local-only audits.
     DO_NOT_TRACK=1 \
@@ -256,6 +259,11 @@ LABEL org.opencontainers.image.title="audit-toolchain" \
       org.opencontainers.image.licenses="Apache-2.0"
 
 WORKDIR /workspace
+
+RUN groupadd --gid 65532 nonroot \
+    && useradd --uid 65532 --gid 65532 --no-create-home nonroot \
+    && chown nonroot:nonroot /workspace
+USER nonroot
 
 # Route every invocation through the toolkit shim. With no arguments
 # (CMD []), the shim drops into an interactive bash; with arguments, it
