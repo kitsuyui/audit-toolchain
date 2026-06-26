@@ -77,10 +77,16 @@ It writes one trace line before the tool starts and one after it exits:
 
 ```text
 audit-toolchain: level=info event=tool_start tool=<name> arg_count=<n> at=<UTC timestamp>
+audit-toolchain: level=error event=tool_not_found tool=<name> exit_code=127 at=<UTC timestamp>
 audit-toolchain: level=info event=tool_finish tool=<name> exit_code=0 at=<UTC timestamp>
 audit-toolchain: level=error event=tool_finish tool=<name> exit_code=<non-zero> at=<UTC timestamp>
 audit-toolchain: level=warn event=tool_killed tool=<name> exit_code=<signal> at=<UTC timestamp>
 ```
+
+`event=tool_not_found` is emitted before the final `event=tool_finish`
+line when the requested command is not installed in the image. The shim
+still returns the standard Unix `127` exit code, but it avoids leaking a
+Bash diagnostic with the shim's internal path and line number.
 
 `event=tool_killed` is emitted when the tool exits due to a termination
 signal (e.g. SIGINT or SIGTERM); all other non-zero exits use
