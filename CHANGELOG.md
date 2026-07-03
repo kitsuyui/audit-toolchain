@@ -22,10 +22,6 @@ identifies the exact source revision.
 
 See [Determinism](./README.md#determinism) in README for the reproducibility guarantee.
 
-## [Unreleased]
-
-<!-- Record notable changes here. -->
-
 ## Historical summary
 
 The project was established to provide a single Docker image with language-agnostic
