@@ -165,7 +165,8 @@ ARG PIP_AUDIT_VERSION
 RUN uv tool install ruff==${RUFF_VERSION} \
     && uv tool install mypy==${MYPY_VERSION} \
     && uv tool install vulture==${VULTURE_VERSION} \
-    && uv tool install pip-audit==${PIP_AUDIT_VERSION}
+    && uv tool install pip-audit==${PIP_AUDIT_VERSION} \
+    && rm -rf /root/.cache/uv
 
 # JS / TS tools (bun global install).
 ARG TYPESCRIPT_VERSION
@@ -178,14 +179,15 @@ RUN bun add -g \
         @biomejs/biome@${BIOME_VERSION} \
         knip@${KNIP_VERSION} \
         madge@${MADGE_VERSION} \
-        markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}
+        markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION} \
+    && rm -rf /root/.bun/install/cache
 
 # Go audit tools.
 ARG STATICCHECK_VERSION
 ARG GOVULNCHECK_VERSION
 RUN go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION} \
     && go install golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} \
-    && rm -rf /root/.cache/go-build
+    && rm -rf /root/.cache/go-build /root/go/pkg/mod
 
 # --- toolkit-level CLI entry ---
 #
