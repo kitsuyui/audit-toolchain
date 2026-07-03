@@ -20,8 +20,8 @@ Usage:
   docker run --rm [--network=none] -v "$PWD:/workspace" audit-toolchain:<tag> [SUBCOMMAND | TOOL [ARG...]]
 
 Toolkit subcommands:
-  --help, help                 Print this message.
-  --version, version           Print toolkit metadata and image-build info.
+  --help, -h, help             Print this message.
+  --version, -V, version       Print toolkit metadata and image-build info.
   --list-tools, list-tools     List installed audit tools as TSV
                                (name<TAB>version<TAB>category), one per line.
 
