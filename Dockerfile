@@ -261,7 +261,9 @@ RUN chmod +x /usr/local/bin/audit-toolchain \
         printf 'jq\t%s\tuniversal\n' "$(jq --version | sed 's/^jq-//')"; \
         printf 'git\t%s\tuniversal\n' "$(git --version | cut -d' ' -f3)"; \
         printf 'curl\t%s\tuniversal\n' "$(curl --version | head -1 | cut -d' ' -f2)"; \
-    } > /usr/local/share/audit-toolchain/tools.tsv
+    } > /usr/local/share/audit-toolchain/tools.tsv \
+    && awk -F'\t' '$2 == "" { print "error: empty version string for tool: " $1 > "/dev/stderr"; found=1 } END { exit found+0 }' \
+        /usr/local/share/audit-toolchain/tools.tsv
 
 # OCI image labels so `docker inspect` carries toolkit metadata even
 # when callers cannot or do not invoke the image's own CLI.
