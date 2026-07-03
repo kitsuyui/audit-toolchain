@@ -38,8 +38,17 @@ check_quoted_tool_trace() {
 
   test "$status" = "127"
   grep -Fq 'event=tool_start tool="bad tool\nlevel=info event=forged" arg_count=0' "$stderr_file"
+  grep -Fq 'event=tool_not_found tool="bad tool\nlevel=info event=forged" exit_code=127' "$stderr_file"
   grep -Fq 'event=tool_finish tool="bad tool\nlevel=info event=forged" exit_code=127' "$stderr_file"
-  ! grep -Eq '^audit-toolchain: level=info event=forged' "$stderr_file"
+  if grep -Eq '^audit-toolchain: level=info event=forged' "$stderr_file"; then
+    return 1
+  fi
+  if grep -Fq '/usr/local/bin/audit-toolchain' "$stderr_file"; then
+    return 1
+  fi
+  if grep -Fq 'command not found' "$stderr_file"; then
+    return 1
+  fi
 }
 
 check_signal_forwarding() {

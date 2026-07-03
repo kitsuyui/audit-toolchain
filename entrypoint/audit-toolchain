@@ -122,6 +122,14 @@ run_tool() {
   printf 'audit-toolchain: level=info event=tool_start tool=%s arg_count=%s at=%s\n' \
     "$tool_logfmt" "$arg_count" "$(timestamp_utc)" >&2
 
+  if ! command -v -- "$tool" >/dev/null 2>&1; then
+    printf 'audit-toolchain: level=error event=tool_not_found tool=%s exit_code=127 at=%s\n' \
+      "$tool_logfmt" "$(timestamp_utc)" >&2
+    printf 'audit-toolchain: level=error event=tool_finish tool=%s exit_code=127 at=%s\n' \
+      "$tool_logfmt" "$(timestamp_utc)" >&2
+    return 127
+  fi
+
   trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
   trap 'pending_signal=INT; if [ -n "$child_pid" ]; then kill -INT "$child_pid" 2>/dev/null || true; fi' INT
 
@@ -206,7 +214,7 @@ case "$1" in
     ;;
   --list-tools|list-tools)
     print_list_tools
-    exit $?
+    exit 0
     ;;
   *)
     run_tool "$@"
