@@ -37,6 +37,28 @@ No `@latest`, no unpinned package names.
 
 When a tool is added or removed, update the count in `scripts/check-image-metrics.sh` in the same PR. The CI gate enforces the exact count.
 
+### Removing, renaming, or recategorizing a tool
+
+`--list-tools` and `/usr/local/share/audit-toolchain/tools.tsv` are a
+machine-readable public interface: downstream automation reads them to
+verify the image's tool inventory without parsing this repository's
+source. Any change to that inventory's shape — removing a tool,
+renaming a tool, or changing a tool's reported category — is a
+compatibility-affecting change, not just a count update, and must:
+
+1. **State the change explicitly in the PR description**, naming the
+   tool(s) affected and whether it is a removal, rename, or
+   category change.
+2. **Record it in `CHANGELOG.md`** under a new entry describing what
+   changed and, for a removal, what (if anything) replaces the tool's
+   coverage.
+3. **Update `scripts/check-image-metrics.sh`** if the count changes, as
+   above — this is necessary but not sufficient on its own.
+
+A rename should be treated as "old name removed, new name added" for
+the purposes of this policy: automation matching on the old tool name
+will otherwise silently stop seeing it in `--list-tools` output.
+
 ### Network classification
 
 Add the new tool to the `Local-only` or `Network-required` section in `README.md` based on whether it reads only from the filesystem or requires external network access.

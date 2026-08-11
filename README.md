@@ -63,6 +63,11 @@ CI builds pass the current commit SHA as `AUDIT_TOOLCHAIN_VERSION` so
 `--version` and the OCI `org.opencontainers.image.version` label identify
 the exact source revision used for the image build.
 
+Removing, renaming, or recategorizing an entry in this inventory is a
+compatibility-affecting change for anyone parsing `--list-tools`; see
+[Removing, renaming, or recategorizing a tool](CONTRIBUTING.md#removing-renaming-or-recategorizing-a-tool)
+in `CONTRIBUTING.md` for the required review and changelog steps.
+
 Anything that is not a toolkit subcommand is delegated to the requested
 tool, so existing command lines keep working:
 
