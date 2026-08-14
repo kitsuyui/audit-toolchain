@@ -1,7 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "customDatasources": {
+    "debianSnapshotDate": {
+      "defaultRegistryUrlTemplate": "https://snapshot.debian.org/mr/timestamp/",
+      "transformTemplates": [
+        "{\"releases\": $map($distinct($map(result.debian, function($v) { $substring($v, 0, 8) })), function($v) { {\"version\": $substring($v, 0, 4) & \"-\" & $substring($v, 4, 2) & \"-\" & $substring($v, 6, 2)} })}"
+      ]
+    }
+  },
   "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG APT_PACKAGES_DATE=(?<currentValue>\\d{4}-\\d{2}-\\d{2})"],
+      "depNameTemplate": "snapshot.debian.org/debian",
+      "datasourceTemplate": "custom.debianSnapshotDate",
+      "versioningTemplate": "loose"
+    },
     {
       "customType": "regex",
       "fileMatch": ["^Dockerfile$"],
