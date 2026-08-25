@@ -51,6 +51,79 @@ check_quoted_tool_trace() {
   fi
 }
 
+# Golden copy of print_help()'s output in entrypoint/audit-toolchain. Update
+# this together with print_help() in the same commit — that pairing is the
+# contract this test enforces.
+expected_help_golden() {
+  cat <<'USAGE'
+audit-toolchain — language-agnostic, audit-time tools packaged as a single Docker image.
+
+Usage:
+  docker run --rm [--network=none] -v "$PWD:/workspace" audit-toolchain:<tag> [SUBCOMMAND | TOOL [ARG...]]
+
+Toolkit subcommands:
+  --help, -h, help             Print this message.
+  --version, -V, version       Print toolkit metadata and image-build info.
+  --list-tools, list-tools     List installed audit tools as TSV
+                               (name<TAB>version<TAB>category), one per line.
+
+Anything else is exec'd as a command in the image. With no arguments and a
+TTY (-it), an interactive bash is started. With no arguments and no TTY, an
+error is returned so automation does not silently treat a no-op as success.
+
+Examples:
+  docker run --rm audit-toolchain:dev --version
+  docker run --rm audit-toolchain:dev --list-tools
+  docker run --rm --network=none -v "$PWD:/workspace" audit-toolchain:dev ruff check .
+
+See README.md (https://github.com/kitsuyui/audit-toolchain) for network
+policy and the full tool catalogue.
+USAGE
+}
+
+check_help_contract() {
+  local alias
+  local actual_file
+  local status
+
+  actual_file="$(mktemp)"
+  trap 'rm -f "$actual_file"' RETURN
+
+  for alias in --help -h help; do
+    set +e
+    docker run --rm "$image" "$alias" >"$actual_file"
+    status="$?"
+    set -e
+
+    test "$status" = "0"
+    if ! diff -u <(expected_help_golden) "$actual_file" >&2; then
+      printf 'audit-toolchain: help output for %s does not match the golden contract\n' "$alias" >&2
+      return 1
+    fi
+  done
+}
+
+check_version_contract() {
+  local alias
+  local actual
+  local status
+  local line_count
+
+  for alias in --version -V version; do
+    set +e
+    actual="$(docker run --rm "$image" "$alias")"
+    status="$?"
+    set -e
+
+    test "$status" = "0"
+    line_count="$(printf '%s\n' "$actual" | wc -l | tr -d ' ')"
+    test "$line_count" = "3"
+    printf '%s\n' "$actual" | sed -n '1p' | grep -Eq '^audit-toolchain .+$'
+    printf '%s\n' "$actual" | sed -n '2p' | grep -Fq 'source: https://github.com/kitsuyui/audit-toolchain'
+    printf '%s\n' "$actual" | sed -n '3p' | grep -Eq '^base: debian:.+-slim$'
+  done
+}
+
 check_signal_forwarding() {
   local container_name="audit-toolchain-signal-test"
   local stderr_file
@@ -86,3 +159,5 @@ check_signal_forwarding() {
 check_basic_trace
 check_quoted_tool_trace
 check_signal_forwarding
+check_help_contract
+check_version_contract
