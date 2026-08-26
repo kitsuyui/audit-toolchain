@@ -124,6 +124,32 @@ check_version_contract() {
   done
 }
 
+check_no_args_non_tty_contract() {
+  local actual_file
+  local expected_file
+  local status
+
+  actual_file="$(mktemp)"
+  expected_file="$(mktemp)"
+  trap 'rm -f "$actual_file" "$expected_file"' RETURN
+
+  {
+    expected_help_golden
+    printf 'audit-toolchain: level=error event=no_tool_specified reason=no_tty\n'
+  } >"$expected_file"
+
+  set +e
+  docker run --rm -i "$image" </dev/null >/dev/null 2>"$actual_file"
+  status="$?"
+  set -e
+
+  test "$status" = "1"
+  if ! diff -u "$expected_file" "$actual_file" >&2; then
+    printf 'audit-toolchain: no-argument/non-TTY output does not match the golden contract\n' >&2
+    return 1
+  fi
+}
+
 check_signal_forwarding() {
   local container_name="audit-toolchain-signal-test"
   local stderr_file
@@ -161,3 +187,4 @@ check_quoted_tool_trace
 check_signal_forwarding
 check_help_contract
 check_version_contract
+check_no_args_non_tty_contract
