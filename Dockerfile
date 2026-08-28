@@ -235,14 +235,14 @@ RUN chmod +x /usr/local/bin/audit-toolchain \
         printf 'base: debian:%s-slim\n' "${DEBIAN_VERSION}"; \
     } > /usr/local/share/audit-toolchain/metadata.txt \
     && { \
-        printf 'cargo-audit\t%s\trust\n' "${CARGO_AUDIT_VERSION}"; \
-        printf 'cargo-deny\t%s\trust\n' "${CARGO_DENY_VERSION}"; \
+        printf 'cargo audit\t%s\trust\n' "${CARGO_AUDIT_VERSION}"; \
+        printf 'cargo deny\t%s\trust\n' "${CARGO_DENY_VERSION}"; \
         printf 'lychee\t%s\tmarkdown\n' "${LYCHEE_VERSION}"; \
         printf 'ruff\t%s\tpython\n' "${RUFF_VERSION}"; \
         printf 'mypy\t%s\tpython\n' "${MYPY_VERSION}"; \
         printf 'vulture\t%s\tpython\n' "${VULTURE_VERSION}"; \
         printf 'pip-audit\t%s\tpython\n' "${PIP_AUDIT_VERSION}"; \
-        printf 'typescript\t%s\tjs\n' "${TYPESCRIPT_VERSION}"; \
+        printf 'tsc\t%s\tjs\n' "${TYPESCRIPT_VERSION}"; \
         printf 'biome\t%s\tjs\n' "${BIOME_VERSION}"; \
         printf 'knip\t%s\tjs\n' "${KNIP_VERSION}"; \
         printf 'madge\t%s\tjs\n' "${MADGE_VERSION}"; \

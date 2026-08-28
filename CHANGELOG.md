@@ -3,6 +3,15 @@
 This project does not yet have a versioned release process.
 There are no Git tags or GitHub Releases at this time.
 
+## Unreleased
+
+- Renamed three `--list-tools` inventory entries so the name column
+  matches the runnable command instead of the package identifier:
+  `cargo-audit` -> `cargo audit`, `cargo-deny` -> `cargo deny`,
+  `typescript` -> `tsc`. The tools themselves are unchanged; only the
+  reported name changed, so automation matching on the old names must
+  switch to the new ones.
+
 ## How to reference a specific version
 
 Since there are no versioned releases, pin by commit SHA:
