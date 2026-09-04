@@ -19,7 +19,7 @@ modifying the project under audit.
 ```sh
 # Build
 docker build \
-  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse --short HEAD)" \
+  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse HEAD)" \
   -t audit-toolchain:dev .
 
 # Run a local-only tool against the current directory.
