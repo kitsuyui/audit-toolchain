@@ -68,7 +68,7 @@ Add the new tool to the `Local-only` or `Network-required` section in `README.md
 ```sh
 # Build the image
 docker build \
-  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse --short HEAD)" \
+  --build-arg AUDIT_TOOLCHAIN_VERSION="$(git rev-parse HEAD)" \
   -t audit-toolchain:dev .
 
 # Run CI metric gate locally
