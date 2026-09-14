@@ -289,6 +289,12 @@ directory groups scripts that are copied into the image as top-level
 commands; add sibling scripts here when introducing additional toolkit
 entry points.
 
+`scripts/` holds host-only scripts that run in CI or as local pre-commit/
+pre-push hooks (for example `check-image-metrics.sh` and
+`check-entrypoint-trace.sh`); nothing under `scripts/` is copied into the
+image. Add sibling scripts here when introducing additional host-side
+checks.
+
 ### Hooks
 
 | Hook | Check | Command |
