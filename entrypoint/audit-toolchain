@@ -213,8 +213,7 @@ case "$1" in
     exit 0
     ;;
   --list-tools|list-tools)
-    print_list_tools
-    exit 0
+    print_list_tools || exit $?
     ;;
   *)
     run_tool "$@"
