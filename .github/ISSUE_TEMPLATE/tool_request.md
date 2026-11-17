@@ -4,7 +4,7 @@ about: Propose adding a new audit tool to the image
 labels: enhancement
 ---
 
-## Tool
+# Tool
 
 Name and repository / homepage:
 

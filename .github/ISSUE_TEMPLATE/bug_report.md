@@ -4,7 +4,7 @@ about: Report unexpected behavior in the image or a bundled tool
 labels: bug
 ---
 
-## Description
+# Description
 
 <!-- What happened and what you expected instead -->
 

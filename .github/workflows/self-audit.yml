@@ -35,13 +35,13 @@ jobs:
         run: |
           docker run --rm --network=none \
             -v "$PWD:/workspace" \
-            audit-toolchain:ci markdownlint-cli2 "*.md"
+            audit-toolchain:ci markdownlint-cli2 "*.md" ".github/**/*.md"
 
       - name: lychee (offline link integrity)
         run: |
           docker run --rm --network=none \
             -v "$PWD:/workspace" \
-            audit-toolchain:ci lychee --offline --no-progress "*.md"
+            audit-toolchain:ci lychee --offline --no-progress --hidden "*.md" ".github/**/*.md"
 
       - name: shellcheck (shell script quality)
         run: |
