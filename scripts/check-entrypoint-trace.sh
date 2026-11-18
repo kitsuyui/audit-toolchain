@@ -170,10 +170,13 @@ check_signal_forwarding() {
   runner_pid="$!"
 
   for _ in $(seq 1 50); do
-    docker inspect "$container_name" >/dev/null 2>&1 && break
+    if grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=2 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"; then
+      break
+    fi
     sleep 0.1
   done
 
+  grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=2 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
   docker kill --signal "$signal" "$container_name" >/dev/null
   wait "$runner_pid"
   status="$?"
