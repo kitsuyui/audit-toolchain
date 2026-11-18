@@ -132,6 +132,8 @@ run_tool() {
 
   trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
   trap 'pending_signal=INT; if [ -n "$child_pid" ]; then kill -INT "$child_pid" 2>/dev/null || true; fi' INT
+  trap 'pending_signal=HUP; if [ -n "$child_pid" ]; then kill -HUP "$child_pid" 2>/dev/null || true; fi' HUP
+  trap 'pending_signal=QUIT; if [ -n "$child_pid" ]; then kill -QUIT "$child_pid" 2>/dev/null || true; fi' QUIT
 
   "$@" &
   child_pid=$!
@@ -142,6 +144,12 @@ run_tool() {
       ;;
     INT)
       kill -INT "$child_pid" 2>/dev/null || true
+      ;;
+    HUP)
+      kill -HUP "$child_pid" 2>/dev/null || true
+      ;;
+    QUIT)
+      kill -QUIT "$child_pid" 2>/dev/null || true
       ;;
   esac
 
@@ -175,7 +183,7 @@ run_tool() {
     break
   done
 
-  trap - TERM INT
+  trap - TERM INT HUP QUIT
 
   local level="info"
   local event="tool_finish"

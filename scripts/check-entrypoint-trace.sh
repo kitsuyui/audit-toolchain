@@ -151,7 +151,8 @@ check_no_args_non_tty_contract() {
 }
 
 check_signal_forwarding() {
-  local container_name="audit-toolchain-signal-test"
+  local signal="$1"
+  local container_name="$2"
   local stderr_file
   local runner_pid
   local status
@@ -163,7 +164,8 @@ check_signal_forwarding() {
 
   set +e
   docker run --name "$container_name" --rm "$image" \
-    bash -c 'trap "exit 42" TERM; while true; do read -r -t 1 _ || true; done' \
+    bash -c 'trap "exit 42" "$1"; while true; do read -r -t 1 _ || true; done' \
+    -- "$signal" \
     2>"$stderr_file" &
   runner_pid="$!"
 
@@ -172,7 +174,7 @@ check_signal_forwarding() {
     sleep 0.1
   done
 
-  docker stop --time 2 "$container_name" >/dev/null
+  docker kill --signal "$signal" "$container_name" >/dev/null
   wait "$runner_pid"
   status="$?"
   set -e
@@ -184,7 +186,10 @@ check_signal_forwarding() {
 
 check_basic_trace
 check_quoted_tool_trace
-check_signal_forwarding
+check_signal_forwarding TERM audit-toolchain-signal-term-test
+check_signal_forwarding INT audit-toolchain-signal-int-test
+check_signal_forwarding HUP audit-toolchain-signal-hup-test
+check_signal_forwarding QUIT audit-toolchain-signal-quit-test
 check_help_contract
 check_version_contract
 check_no_args_non_tty_contract

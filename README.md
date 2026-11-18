@@ -76,8 +76,9 @@ docker run --rm --network=none -v "$PWD:/workspace" audit-toolchain:dev ruff che
 docker run --rm -it audit-toolchain:dev bash
 ```
 
-The shim preserves the delegated tool's exit status and forwards
-termination signals, but it is not a byte-for-byte stderr passthrough.
+The shim preserves the delegated tool's exit status and forwards SIGINT,
+SIGTERM, SIGHUP, and SIGQUIT to delegated tools, but it is not a byte-for-byte
+stderr passthrough.
 It writes one trace line before the tool starts and one after it exits:
 
 ```text
