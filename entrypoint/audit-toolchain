@@ -115,6 +115,7 @@ run_tool() {
   local status=0
   local signal_status=0
   local rewaiting=0
+  local monitor_was_enabled=0
 
   arg_count=$(($# - 1))
   tool_logfmt="$(logfmt_value "$tool")"
@@ -132,9 +133,21 @@ run_tool() {
 
   trap 'pending_signal=TERM; if [ -n "$child_pid" ]; then kill -TERM "$child_pid" 2>/dev/null || true; fi' TERM
   trap 'pending_signal=INT; if [ -n "$child_pid" ]; then kill -INT "$child_pid" 2>/dev/null || true; fi' INT
+  trap 'pending_signal=HUP; if [ -n "$child_pid" ]; then kill -HUP "$child_pid" 2>/dev/null || true; fi' HUP
+  trap 'pending_signal=QUIT; if [ -n "$child_pid" ]; then kill -QUIT "$child_pid" 2>/dev/null || true; fi' QUIT
 
+  # With job control disabled, Bash starts asynchronous children with INT and
+  # QUIT ignored. Temporarily enable it so a delegated tool can install and
+  # receive the signal handlers that we forward below.
+  case "$-" in
+    *m*) monitor_was_enabled=1 ;;
+  esac
+  set -m
   "$@" &
   child_pid=$!
+  if [ "$monitor_was_enabled" -eq 0 ]; then
+    set +m
+  fi
 
   case "$pending_signal" in
     TERM)
@@ -142,6 +155,12 @@ run_tool() {
       ;;
     INT)
       kill -INT "$child_pid" 2>/dev/null || true
+      ;;
+    HUP)
+      kill -HUP "$child_pid" 2>/dev/null || true
+      ;;
+    QUIT)
+      kill -QUIT "$child_pid" 2>/dev/null || true
       ;;
   esac
 
@@ -175,7 +194,7 @@ run_tool() {
     break
   done
 
-  trap - TERM INT
+  trap - TERM INT HUP QUIT
 
   local level="info"
   local event="tool_finish"

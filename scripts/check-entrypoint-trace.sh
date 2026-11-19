@@ -151,7 +151,8 @@ check_no_args_non_tty_contract() {
 }
 
 check_signal_forwarding() {
-  local container_name="audit-toolchain-signal-test"
+  local signal="$1"
+  local container_name="$2"
   local stderr_file
   local runner_pid
   local status
@@ -163,28 +164,35 @@ check_signal_forwarding() {
 
   set +e
   docker run --name "$container_name" --rm "$image" \
-    bash -c 'trap "exit 42" TERM; while true; do read -r -t 1 _ || true; done' \
+    bash -c 'trap "exit 42" "$1"; while true; do read -r -t 1 _ || true; done' \
+    -- "$signal" \
     2>"$stderr_file" &
   runner_pid="$!"
 
   for _ in $(seq 1 50); do
-    docker inspect "$container_name" >/dev/null 2>&1 && break
+    if grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=4 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"; then
+      break
+    fi
     sleep 0.1
   done
 
-  docker stop --time 2 "$container_name" >/dev/null
+  grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=4 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
+  docker kill --signal "$signal" "$container_name" >/dev/null
   wait "$runner_pid"
   status="$?"
   set -e
 
   test "$status" = "42"
-  grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=2 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
+  grep -Eq '^audit-toolchain: level=info event=tool_start tool=bash arg_count=4 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
   grep -Eq '^audit-toolchain: level=error event=tool_finish tool=bash exit_code=42 at=[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$stderr_file"
 }
 
 check_basic_trace
 check_quoted_tool_trace
-check_signal_forwarding
+check_signal_forwarding TERM audit-toolchain-signal-term-test
+check_signal_forwarding INT audit-toolchain-signal-int-test
+check_signal_forwarding HUP audit-toolchain-signal-hup-test
+check_signal_forwarding QUIT audit-toolchain-signal-quit-test
 check_help_contract
 check_version_contract
 check_no_args_non_tty_contract
